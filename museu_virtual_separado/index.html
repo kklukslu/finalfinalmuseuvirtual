@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Museu Virtual | Pioneiros da Computação</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="js/tailwind-config.js"></script>
+    
+        <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-soft-bg text-slate-700 font-sans h-full flex flex-col justify-between antialiased selection:bg-brand-100 selection:text-brand-900 min-h-screen">
+
+    <!-- SPLASH SCREEN / WELCOME MODAL -->
+    <div id="startOverlay" class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md transition-opacity duration-300">
+        <div class="max-w-md w-full bg-white rounded-3xl p-8 sm:p-10 text-center shadow-soft-lg border border-white/80 space-y-6">
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-brand-50 flex items-center justify-center text-brand-600 text-2xl shadow-soft-sm">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+
+            <div class="space-y-2">
+                <span class="text-xs font-semibold uppercase tracking-widest text-brand-600">Exposição Interativa</span>
+                <h1 class="text-2xl font-bold text-soft-heading tracking-tight">Pioneiros da Computação</h1>
+                <p class="text-soft-muted text-xs sm:text-sm leading-relaxed">
+                    Acompanhe a história de **Ada Lovelace**, **John von Neumann** e **Claude Shannon** com narração por áudio e desafios interativos de 15 segundos.
+                </p>
+            </div>
+
+            <button id="startBtn" class="w-full py-4 px-6 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm shadow-soft-md transition-all transform active:scale-95 flex items-center justify-center gap-2">
+                <span>Iniciar Tour Virtual</span>
+                <i class="fa-solid fa-play text-xs"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- NAVBAR HEADER -->
+    <header class="w-full max-w-5xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between">
+        <!-- Logo Brand -->
+        <div class="flex items-center gap-3">
+            <div class="w-3.5 h-3.5 rounded-full bg-brand-600 shadow-sm"></div>
+            <span class="font-bold text-sm sm:text-base text-soft-heading tracking-tight">MUSEU VIRTUAL</span>
+            <span class="text-xs text-soft-muted font-normal hidden sm:inline">/ Pioneiros da Computação</span>
+        </div>
+
+        <!-- Slide Progress Badge -->
+        <div class="px-4 py-1.5 rounded-full bg-white border border-slate-300/80 text-xs font-medium text-soft-muted shadow-soft-sm flex items-center gap-2">
+            <span>Slide</span>
+            <span id="slideCounter" class="text-soft-heading font-bold">1 / 5</span>
+        </div>
+
+        <!-- Mute & Audio Indicator -->
+        <div class="flex items-center gap-2 sm:gap-3">
+            <div id="audioStatusBadge" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-300/80 text-xs text-soft-muted shadow-soft-sm">
+                <span id="audioDot" class="w-2 h-2 rounded-full bg-slate-300"></span>
+                <span id="audioLabel" class="text-[11px] font-medium">Aguardando</span>
+            </div>
+
+            <button id="muteToggleBtn" class="w-9 h-9 rounded-full bg-white border border-slate-300/80 hover:border-slate-400 flex items-center justify-center text-soft-muted hover:text-soft-heading transition-all shadow-soft-sm" title="Alternar Narração">
+                <i id="muteIcon" class="fa-solid fa-volume-high text-xs"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="w-full max-w-5xl mx-auto px-4 sm:px-6 my-auto py-2">
+        <div id="slideCard" class="bg-white rounded-3xl border border-slate-300/70 shadow-soft-md p-6 sm:p-10 md:p-12 slide-fade-in relative overflow-hidden">
+            
+            <!-- Global Top Progress Bar -->
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-slate-100">
+                <div id="progressBar" class="h-full bg-brand-600 w-0 transition-all duration-300 ease-linear"></div>
+            </div>
+
+            <!-- VIEW 1: BIOGRAPHY CONTENT -->
+            <div id="bioView" class="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-center">
+                
+                <!-- Left Column: Image -->
+                <div class="md:col-span-5 flex justify-center">
+                    <div class="relative w-full max-w-xs sm:max-w-sm aspect-[4/3] sm:aspect-square rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-soft-sm group">
+                        <img id="slideImage" src="" alt="Pioneiro" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                        <span id="slideEraTag" class="absolute bottom-3 left-3 right-3 text-center text-xs font-semibold bg-white/90 backdrop-blur-md text-slate-800 py-1.5 px-3 rounded-xl border border-white/60 shadow-soft-sm">
+                            Época
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Right Column: Details -->
+                <div class="md:col-span-7 space-y-5">
+                    
+                    <div class="space-y-1.5">
+                        <span id="slideCategory" class="inline-block px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase">
+                            Categoria
+                        </span>
+                        <h2 id="slideTitle" class="text-2xl sm:text-3xl font-extrabold text-soft-heading tracking-tight">
+                            Título
+                        </h2>
+                        <h3 id="slideSubtitle" class="text-xs sm:text-sm text-soft-muted font-medium">
+                            Subtítulo
+                        </h3>
+                    </div>
+
+                    <!-- Synopsis Box -->
+                    <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
+                        <div class="flex items-center gap-2 text-xs font-bold text-brand-600 uppercase tracking-wider">
+                            <i class="fa-solid fa-book-open text-[11px]"></i>
+                            <span>História e Legado</span>
+                        </div>
+                        <p id="slideSynopsis" class="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+                            Texto explicativo...
+                        </p>
+                    </div>
+
+                    <!-- Skip to Quiz Button -->
+                    <div id="quizPromptBtnContainer" class="hidden pt-1">
+                        <button id="goToQuizBtn" class="w-full py-3 px-5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-all shadow-soft-sm flex items-center justify-center gap-2">
+                            <span>Ir Direto para o Quiz (15s)</span>
+                            <i class="fa-solid fa-circle-question"></i>
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- VIEW 2: QUIZ SECTION -->
+            <div id="quizView" class="hidden space-y-6">
+                <!-- Quiz Header & 15s Timer -->
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center text-base font-bold shadow-soft-sm">
+                            <i class="fa-solid fa-stopwatch"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold uppercase text-brand-600 tracking-wider">Desafio de Fixação</span>
+                            <h4 id="quizPioneerName" class="text-sm sm:text-base font-bold text-soft-heading">Pergunta sobre o Pioneiro</h4>
+                        </div>
+                    </div>
+
+                    <!-- 15s Timer Box -->
+                    <div class="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-3 px-4 py-2 rounded-xl bg-white border border-slate-300 shadow-soft-sm">
+                        <span class="text-xs text-soft-muted font-medium">Tempo:</span>
+                        <div class="flex items-center gap-1 font-mono text-lg font-extrabold text-brand-600">
+                            <span id="timerSeconds">15</span><span>s</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timer Progress Bar -->
+                <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div id="quizTimerBar" class="h-full bg-brand-600 w-full timer-bar-transition"></div>
+                </div>
+
+                <!-- Question Title -->
+                <div class="space-y-2">
+                    <p id="quizQuestionText" class="text-base sm:text-lg font-bold text-soft-heading leading-snug">
+                        Pergunta aqui...
+                    </p>
+                </div>
+
+                <!-- Options Grid -->
+                <div id="quizOptionsContainer" class="grid grid-cols-1 gap-3">
+                    <!-- Options injected dynamically -->
+                </div>
+
+                <!-- Feedback Banner -->
+                <div id="quizFeedbackBanner" class="hidden p-4 rounded-2xl text-xs sm:text-sm font-semibold flex items-center justify-between transition-all">
+                    <div class="flex items-center gap-2">
+                        <i id="feedbackIcon" class="text-base"></i>
+                        <span id="feedbackText">Feedback</span>
+                    </div>
+                    <span class="text-xs font-normal text-slate-500">Próximo slide em 2s...</span>
+                </div>
+            </div>
+
+            <!-- VIEW 3: FINAL SCORE SCREEN -->
+            <div id="finalView" class="hidden text-center space-y-6 py-4">
+                <div class="w-20 h-20 mx-auto rounded-3xl bg-brand-50 border border-brand-100 text-brand-600 flex items-center justify-center text-3xl shadow-soft-sm">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+
+                <div class="space-y-2">
+                    <span class="text-xs font-bold uppercase text-brand-600 tracking-widest">Jornada Concluída</span>
+                    <h2 class="text-3xl font-extrabold text-soft-heading tracking-tight">Parabéns, Visitante!</h2>
+                    <p class="text-sm text-soft-muted max-w-md mx-auto">
+                        Você concluiu a jornada pelo Museu Virtual dos Pioneiros da Computação. Veja o seu resultado no desafio:
+                    </p>
+                </div>
+
+                <!-- Score Board Card -->
+                <div class="max-w-xs mx-auto p-6 rounded-3xl bg-slate-50 border border-slate-200 shadow-soft-sm space-y-3">
+                    <span class="text-xs text-soft-muted uppercase font-bold tracking-wider">Pontuação Final</span>
+                    <div class="text-4xl font-black text-brand-600">
+                        <span id="finalScoreDisplay">0</span> / 3
+                    </div>
+                    <p id="finalScoreMessage" class="text-xs font-medium text-slate-600">
+                        Ótimo trabalho!
+                    </p>
+                </div>
+
+                <button id="restartBtn" class="px-8 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm shadow-soft-md transition-all transform active:scale-95 inline-flex items-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>Reiniciar Jornada</span>
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- FOOTER CONTROLS -->
+    <footer class="w-full max-w-5xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        
+        <!-- Slide Pills Selector -->
+        <div id="dotsContainer" class="flex items-center gap-1.5 overflow-x-auto max-w-full py-1">
+            <!-- Dynamic Chips -->
+        </div>
+
+        <!-- Playback Controls -->
+        <div class="flex items-center gap-2">
+            <button id="prevBtn" class="w-10 h-10 rounded-full bg-white border border-slate-300/80 hover:border-slate-400 flex items-center justify-center text-soft-muted hover:text-soft-heading transition-all shadow-soft-sm" title="Slide Anterior">
+                <i class="fa-solid fa-chevron-left text-xs"></i>
+            </button>
+
+            <button id="playPauseBtn" class="px-5 py-2.5 rounded-full bg-soft-heading hover:bg-slate-800 text-white text-xs font-semibold transition-all shadow-soft-sm flex items-center gap-2">
+                <i id="playPauseIcon" class="fa-solid fa-pause text-xs"></i>
+                <span id="playPauseText">Pausar</span>
+            </button>
+
+            <button id="nextBtn" class="w-10 h-10 rounded-full bg-white border border-slate-300/80 hover:border-slate-400 flex items-center justify-center text-soft-muted hover:text-soft-heading transition-all shadow-soft-sm" title="Próximo Slide">
+                <i class="fa-solid fa-chevron-right text-xs"></i>
+            </button>
+        </div>
+
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // DATASET WITH EXACT HISTORICAL TEXTS AND QUIZZES
+        const SLIDES = [
+            {
+                id: 0,
+                type: 'intro',
+                category: "Introdução",
+                categoryClass: "bg-slate-100 text-slate-700 border border-slate-300/60",
+                title: "Pioneiros da Computação",
+                subtitle: "A Tríade Fundamental da Era Digital",
+                image: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80",
+                era: "Séculos XIX e XX",
+                synopsis: "Bem-vindo ao Museu Virtual dos Pioneiros da Computação. Esta exposição apresenta Ada Lovelace, John von Neumann e Claude Shannon. Acompanhe a história de cada pioneiro e responda aos desafios de 15 segundos.",
+                speech: "Bem-vindo ao Museu Virtual dos Pioneiros da Computação. Esta exposição apresenta Ada Lovelace, John von Neumann e Claude Shannon. Acompanhe as conquistas de cada pioneiro e teste seus conhecimentos nos desafios de 15 segundos."
+            },
+            {
+                id: 1,
+                type: 'pioneer',
+                category: "Ada Lovelace",
+                categoryClass: "bg-purple-50 text-purple-700 border border-purple-200/60",
+                title: "Ada Lovelace",
+                subtitle: "1815 – 1852 • A Primeira Programadora",
+                image: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=800&q=80",
+                era: "Londres, 1843",
+                synopsis: "Ada Lovelace, matemática britânica, colaborou com Charles Babbage na máquina analítica. Em 1843, ela publicou o primeiro algoritmo da história projetado para ser executado por uma máquina, calculando os números de Bernoulli. Lovelace percebeu que a computação não estava restrita a números. Se a máquina pudesse manipular símbolos com regras bem definidas, poderia compor músicas, desenhar e processar qualquer tipo de dado abstrato.",
+                speech: "Ada Lovelace, matemática britânica, colaborou com Charles Babbage na máquina analítica. Em 1843, ela publicou o primeiro algoritmo da história projetado para ser executado por uma máquina, calculando os números de Bernoulli. Lovelace percebeu que a computação não estava restrita a números. Se a máquina pudesse manipular símbolos com regras bem definidas, poderia compor músicas, desenhar e processar qualquer tipo de dado abstrato.",
+                quiz: {
+                    question: "Qual foi o principal avanço conceitual de Ada Lovelace sobre a máquina analítica em 1843?",
+                    speechQuestion: "Desafio Ada Lovelace: Qual foi o principal avanço conceitual de Ada Lovelace sobre a máquina analítica em 1843?",
+                    options: [
+                        { text: "Percebeu que a máquina podia manipular símbolos abstratos, compor músicas e processar qualquer tipo de dado.", correct: true },
+                        { text: "Inventou o primeiro transístor de silício para computadores mecânicos.", correct: false },
+                        { text: "Criou a arquitetura de memória unificada para a CPU.", correct: false }
+                    ]
+                }
+            },
+            {
+                id: 2,
+                type: 'pioneer',
+                category: "John von Neumann",
+                categoryClass: "bg-emerald-50 text-emerald-700 border border-emerald-200/60",
+                title: "John von Neumann",
+                subtitle: "1903 – 1957 • O Arquiteto dos Processadores",
+                image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
+                era: "Princeton, 1945",
+                synopsis: "John von Neumann, polímata húngaro-americano, formulou em 1945 a arquitetura von Neumann. Ela estabeleceu a estrutura de CPU, memória principal e dispositivos de entrada e saída, onde programas e dados residem na mesma memória. Além dos computadores, von Neumann cofundou a teoria dos jogos na economia, contribuiu para a física nuclear e criou a teoria dos autômatos celulares, demonstrando como sistemas autoreplicantes simples podem gerar complexidade biológica.",
+                speech: "John von Neumann, polímata húngaro-americano, formulou em 1945 a arquitetura von Neumann. Ela estabeleceu a estrutura de CPU, memória principal e dispositivos de entrada e saída, onde programas e dados residem na mesma memória. Além dos computadores, von Neumann cofundou a teoria dos jogos na economia, contribuiu para a física nuclear e criou a teoria dos autômatos celulares, demonstrando como sistemas autoreplicantes simples podem gerar complexidade biológica.",
+                quiz: {
+                    question: "O que caracteriza a arquitetura von Neumann utilizada na maioria dos computadores atuais?",
+                    speechQuestion: "Desafio John von Neumann: O que caracteriza a arquitetura von Neumann utilizada na maioria dos computadores atuais?",
+                    options: [
+                        { text: "Separação física obrigatória entre circuitos de dados e instruções em mídias distintas.", correct: false },
+                        { text: "Estrutura de CPU, memória principal e E/S onde programas e dados residem na mesma memória.", correct: true },
+                        { text: "Processamento exclusivo baseado em válvulas termiônicas analógicas.", correct: false }
+                    ]
+                }
+            },
+            {
+                id: 3,
+                type: 'pioneer',
+                category: "Claude Shannon",
+                categoryClass: "bg-sky-50 text-sky-700 border border-sky-200/60",
+                title: "Claude Shannon",
+                subtitle: "1916 – 2001 • O Pai da Teoria da Informação",
+                image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80",
+                era: "Bell Labs, 1948",
+                synopsis: "Em 1937, Claude Shannon demonstrou em sua tese de mestrado no MIT que relés elétricos podiam resolver operações de álgebra booleana, fundando as bases teóricas de todos os circuitos digitais. Em 1948, Shannon publicou A Mathematical Theory of Communication, estabelecendo a palavra bit como a unidade fundamental de informação e definindo os limites matemáticos de velocidade e compressão de dados.",
+                speech: "Em 1937, Claude Shannon demonstrou em sua tese de mestrado no MIT que relés elétricos podiam resolver operações de álgebra booleana, fundando as bases teóricas de todos os circuitos digitais. Em 1948, Shannon publicou A Mathematical Theory of Communication, estabelecendo a palavra bit como a unidade fundamental de informação e definindo os limites matemáticos de velocidade e compressão de dados.",
+                quiz: {
+                    question: "O que Claude Shannon definiu como a unidade fundamental de medição da informação em 1948?",
+                    speechQuestion: "Desafio Claude Shannon: O que Claude Shannon definiu como a unidade fundamental de medição da informação em 1948?",
+                    options: [
+                        { text: "O Byte", correct: false },
+                        { text: "O Bit", correct: true },
+                        { text: "O Hertz", correct: false }
+                    ]
+                }
+            },
+            {
+                id: 4,
+                type: 'final',
+                category: "Conclusão",
+                categoryClass: "bg-indigo-50 text-indigo-700 border border-indigo-200/60",
+                title: "Resultado do Tour",
+                subtitle: "Resumo do Aprendizado",
+                speech: "Parabéns por concluir a jornada pelo Museu Virtual dos Pioneiros da Computação. Veja o seu resultado no painel a seguir."
+            }
+        ];
+
+        // GLOBAL APPLICATION STATE
+        let currentSlideIndex = 0;
+        let isPlaying = false;
+        let isMuted = false;
+        let activePhase = 'BIO'; // 'BIO' | 'QUIZ' | 'FINAL'
+        let quizTimeLeft = 15;
+        let quizTimerInterval = null;
+        let quizAnswered = false;
+        let userScores = [false, false, false]; // Slide 1, 2, 3
+        let synth = window.speechSynthesis;
+        let currentUtterance = null;
+        let fallbackTimer = null;
+
+        // DOM ELEMENTS
+        const startOverlay = document.getElementById('startOverlay');
+        const startBtn = document.getElementById('startBtn');
+        const slideCard = document.getElementById('slideCard');
+        const bioView = document.getElementById('bioView');
+        const quizView = document.getElementById('quizView');
+        const finalView = document.getElementById('finalView');
+
+        // Bio View Elements
+        const slideImage = document.getElementById('slideImage');
+        const slideEraTag = document.getElementById('slideEraTag');
+        const slideCategory = document.getElementById('slideCategory');
+        const slideTitle = document.getElementById('slideTitle');
+        const slideSubtitle = document.getElementById('slideSubtitle');
+        const slideSynopsis = document.getElementById('slideSynopsis');
+        const slideCounter = document.getElementById('slideCounter');
+        const progressBar = document.getElementById('progressBar');
+        const quizPromptBtnContainer = document.getElementById('quizPromptBtnContainer');
+        const goToQuizBtn = document.getElementById('goToQuizBtn');
+
+        // Quiz View Elements
+        const quizPioneerName = document.getElementById('quizPioneerName');
+        const quizQuestionText = document.getElementById('quizQuestionText');
+        const quizOptionsContainer = document.getElementById('quizOptionsContainer');
+        const timerSeconds = document.getElementById('timerSeconds');
+        const quizTimerBar = document.getElementById('quizTimerBar');
+        const quizFeedbackBanner = document.getElementById('quizFeedbackBanner');
+        const feedbackIcon = document.getElementById('feedbackIcon');
+        const feedbackText = document.getElementById('feedbackText');
+
+        // Final View Elements
+        const finalScoreDisplay = document.getElementById('finalScoreDisplay');
+        const finalScoreMessage = document.getElementById('finalScoreMessage');
+        const restartBtn = document.getElementById('restartBtn');
+
+        // Controls Elements
+        const dotsContainer = document.getElementById('dotsContainer');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const playPauseIcon = document.getElementById('playPauseIcon');
+        const playPauseText = document.getElementById('playPauseText');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const muteToggleBtn = document.getElementById('muteToggleBtn');
+        const muteIcon = document.getElementById('muteIcon');
+        const audioDot = document.getElementById('audioDot');
+        const audioLabel = document.getElementById('audioLabel');
+
+        // INITIALIZATION
+        window.addEventListener('DOMContentLoaded', () => {
+            renderDots();
+            loadSlide(0, false);
+        });
+
+        // START BUTTON
+        startBtn.addEventListener('click', () => {
+            startOverlay.classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => startOverlay.classList.add('hidden'), 300);
+            isPlaying = true;
+            updatePlayPauseUI();
+            loadSlide(0, true);
+        });
+
+        // RENDER CHIPS
+        function renderDots() {
+            dotsContainer.innerHTML = SLIDES.map((slide, idx) => `
+                <button onclick="goToSlide(${idx})" class="px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                    idx === currentSlideIndex
+                    ? 'bg-brand-600 text-white shadow-soft-sm'
+                    : 'bg-white text-soft-muted hover:text-soft-heading border border-slate-300/80'
+                }">
+                    ${idx === 0 ? 'Início' : idx === 4 ? 'Fim' : '0' + idx}
+                </button>
+            `).join('');
+        }
+
+        // LOAD SLIDE ENGINE
+        function loadSlide(index, autoPlayAudio = true) {
+            clearSpeechAndTimers();
+
+            currentSlideIndex = index;
+            const item = SLIDES[index];
+
+            // Re-trigger Animation
+            slideCard.classList.remove('slide-fade-in');
+            void slideCard.offsetWidth;
+            slideCard.classList.add('slide-fade-in');
+
+            slideCounter.textContent = `${index + 1} / ${SLIDES.length}`;
+            renderDots();
+            progressBar.style.width = '0%';
+
+            if (item.type === 'final') {
+                activePhase = 'FINAL';
+                showFinalView();
+                if (isPlaying && autoPlayAudio) speakText(item.speech, onBioSpeechEnded);
+            } else {
+                activePhase = 'BIO';
+                showBioView(item);
+                if (isPlaying && autoPlayAudio) speakText(item.speech, onBioSpeechEnded);
+            }
+        }
+
+        // SHOW BIO VIEW
+        function showBioView(item) {
+            bioView.classList.remove('hidden');
+            quizView.classList.add('hidden');
+            finalView.classList.add('hidden');
+
+            slideImage.src = item.image;
+            slideImage.alt = item.title;
+            slideEraTag.textContent = item.era;
+            slideCategory.textContent = item.category;
+            slideCategory.className = `inline-block px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase ${item.categoryClass}`;
+            slideTitle.textContent = item.title;
+            slideSubtitle.textContent = item.subtitle;
+            slideSynopsis.textContent = item.synopsis;
+
+            if (item.type === 'pioneer') {
+                quizPromptBtnContainer.classList.remove('hidden');
+            } else {
+                quizPromptBtnContainer.classList.add('hidden');
+            }
+        }
+
+        // WHEN BIO SPEECH ENDS -> GO TO QUIZ OR NEXT SLIDE
+        function onBioSpeechEnded() {
+            if (!isPlaying) return;
+            const item = SLIDES[currentSlideIndex];
+
+            if (item.type === 'intro') {
+                // Auto advance to next slide after intro
+                setTimeout(() => {
+                    if (isPlaying) loadSlide(currentSlideIndex + 1, true);
+                }, 1000);
+            } else if (item.type === 'pioneer') {
+                // Auto switch to Quiz
+                startQuizState();
+            }
+        }
+
+        // START QUIZ STATE (15s TIMER & QUESTION SPEECH)
+        function startQuizState() {
+            const item = SLIDES[currentSlideIndex];
+            if (!item.quiz) return;
+
+            clearSpeechAndTimers();
+            activePhase = 'QUIZ';
+
+            bioView.classList.add('hidden');
+            quizView.classList.remove('hidden');
+            finalView.classList.add('hidden');
+
+            quizPioneerName.textContent = `Pergunta sobre ${item.category}`;
+            quizQuestionText.textContent = item.quiz.question;
+            quizFeedbackBanner.classList.add('hidden');
+            quizAnswered = false;
+
+            // Render 3 Options
+            quizOptionsContainer.innerHTML = item.quiz.options.map((opt, idx) => `
+                <button onclick="handleAnswerClick(${idx})" class="quiz-option-btn w-full p-4 rounded-2xl bg-white border border-slate-200 hover:border-brand-500 hover:bg-brand-50/40 text-left text-xs sm:text-sm font-medium text-slate-700 transition-all flex items-center justify-between group shadow-soft-sm">
+                    <span class="flex items-center gap-3">
+                        <span class="w-7 h-7 rounded-xl bg-slate-100 group-hover:bg-brand-600 group-hover:text-white text-slate-500 font-bold text-xs flex items-center justify-center transition-colors shrink-0">
+                            ${String.fromCharCode(65 + idx)}
+                        </span>
+                        <span class="leading-relaxed">${opt.text}</span>
+                    </span>
+                    <i class="fa-regular fa-circle text-slate-300 group-hover:text-brand-500 transition-colors shrink-0"></i>
+                </button>
+            `).join('');
+
+            // Speak Quiz Question
+            if (isPlaying) {
+                speakText(item.quiz.speechQuestion);
+            }
+
+            // Start 15-Second Timer
+            startQuizTimer();
+        }
+
+        // 15-SECOND COUNTDOWN TIMER
+        function startQuizTimer() {
+            quizTimeLeft = 15;
+            timerSeconds.textContent = '15';
+            quizTimerBar.style.width = '100%';
+            quizTimerBar.classList.remove('bg-red-500');
+            quizTimerBar.classList.add('bg-brand-600');
+
+            clearInterval(quizTimerInterval);
+            quizTimerInterval = setInterval(() => {
+                quizTimeLeft--;
+                timerSeconds.textContent = quizTimeLeft;
+                const percentage = (quizTimeLeft / 15) * 100;
+                quizTimerBar.style.width = `${percentage}%`;
+
+                if (quizTimeLeft <= 5) {
+                    quizTimerBar.classList.remove('bg-brand-600');
+                    quizTimerBar.classList.add('bg-red-500');
+                }
+
+                if (quizTimeLeft <= 0) {
+                    clearInterval(quizTimerInterval);
+                    handleAnswerTimeout();
+                }
+            }, 1000);
+        }
+
+        // HANDLE ANSWER SELECTION
+        function handleAnswerClick(selectedIndex) {
+            if (quizAnswered) return;
+            quizAnswered = true;
+            clearInterval(quizTimerInterval);
+            stopSpeech();
+
+            const item = SLIDES[currentSlideIndex];
+            const isCorrect = item.quiz.options[selectedIndex].correct;
+            userScores[currentSlideIndex - 1] = isCorrect;
+
+            highlightOptions(selectedIndex);
+            showFeedback(isCorrect, false);
+
+            // Auto-advance after 2 seconds
+            setTimeout(() => {
+                if (isPlaying) loadSlide(currentSlideIndex + 1, true);
+            }, 2000);
+        }
+
+        // HANDLE 15s TIMEOUT
+        function handleAnswerTimeout() {
+            if (quizAnswered) return;
+            quizAnswered = true;
+            stopSpeech();
+
+            userScores[currentSlideIndex - 1] = false;
+            highlightOptions(-1); // Show correct answer in green
+            showFeedback(false, true);
+
+            // Auto-advance after 2 seconds
+            setTimeout(() => {
+                if (isPlaying) loadSlide(currentSlideIndex + 1, true);
+            }, 2000);
+        }
+
+        // HIGHLIGHT CORRECT & INCORRECT OPTIONS
+        function highlightOptions(selectedIndex) {
+            const item = SLIDES[currentSlideIndex];
+            const buttons = quizOptionsContainer.querySelectorAll('.quiz-option-btn');
+
+            buttons.forEach((btn, idx) => {
+                btn.disabled = true;
+                btn.classList.remove('hover:border-brand-500', 'hover:bg-brand-50/40');
+
+                const isThisCorrect = item.quiz.options[idx].correct;
+
+                if (isThisCorrect) {
+                    btn.classList.add('bg-emerald-50', 'border-emerald-500', 'text-emerald-900');
+                    btn.querySelector('i').className = 'fa-solid fa-circle-check text-emerald-600';
+                } else if (idx === selectedIndex && !isThisCorrect) {
+                    btn.classList.add('bg-red-50', 'border-red-400', 'text-red-900');
+                    btn.querySelector('i').className = 'fa-solid fa-circle-xmark text-red-500';
+                } else {
+                    btn.classList.add('opacity-50');
+                }
+            });
+        }
+
+        // SHOW FEEDBACK BANNER
+        function showFeedback(isCorrect, isTimeout) {
+            quizFeedbackBanner.classList.remove('hidden', 'bg-emerald-50', 'text-emerald-800', 'bg-red-50', 'text-red-800', 'border-emerald-200', 'border-red-200');
+
+            if (isCorrect) {
+                quizFeedbackBanner.classList.add('bg-emerald-50', 'text-emerald-800', 'border', 'border-emerald-200');
+                feedbackIcon.className = 'fa-solid fa-circle-check text-emerald-600';
+                feedbackText.textContent = 'Resposta Correta! Excelente conhecimento.';
+            } else if (isTimeout) {
+                quizFeedbackBanner.classList.add('bg-red-50', 'text-red-800', 'border', 'border-red-200');
+                feedbackIcon.className = 'fa-solid fa-clock text-red-600';
+                feedbackText.textContent = 'Tempo Esgotado! Veja a resposta em destaque.';
+            } else {
+                quizFeedbackBanner.classList.add('bg-red-50', 'text-red-800', 'border', 'border-red-200');
+                feedbackIcon.className = 'fa-solid fa-circle-xmark text-red-600';
+                feedbackText.textContent = 'Resposta Incorreta. A opção verdadeira está em verde.';
+            }
+        }
+
+        // SHOW FINAL SCORE SCREEN
+        function showFinalView() {
+            bioView.classList.add('hidden');
+            quizView.classList.add('hidden');
+            finalView.classList.remove('hidden');
+
+            const score = userScores.filter(Boolean).length;
+            finalScoreDisplay.textContent = score;
+
+            if (score === 3) {
+                finalScoreMessage.textContent = 'Perfeito! Você acertou todas as 3 perguntas.';
+            } else if (score === 2) {
+                finalScoreMessage.textContent = 'Muito bem! Você acertou 2 de 3 perguntas.';
+            } else {
+                finalScoreMessage.textContent = 'Bom esforço! Que tal reiniciar para revisar o acervo?';
+            }
+        }
+
+        // WEB SPEECH API SYNTHESIS
+        function speakText(text, onEndCallback = null) {
+            stopSpeech();
+
+            if (isMuted || !('speechSynthesis' in window)) {
+                setAudioBadge(false, 'Mudo');
+                if (onEndCallback) {
+                    const duration = Math.max(3000, text.length * 50);
+                    fallbackTimer = setTimeout(onEndCallback, duration);
+                }
+                return;
+            }
+
+            setAudioBadge(true, 'Reproduzindo');
+            currentUtterance = new SpeechSynthesisUtterance(text);
+            currentUtterance.lang = 'pt-BR';
+            currentUtterance.rate = 0.95;
+
+            // Pick Portuguese voice if available
+            const voices = synth.getVoices();
+            const ptVoice = voices.find(v => v.lang.includes('pt') || v.lang.includes('PT'));
+            if (ptVoice) currentUtterance.voice = ptVoice;
+
+            currentUtterance.onend = () => {
+                setAudioBadge(false, 'Concluído');
+                if (onEndCallback) onEndCallback();
+            };
+
+            currentUtterance.onerror = () => {
+                setAudioBadge(false, 'Erro');
+                if (onEndCallback) onEndCallback();
+            };
+
+            synth.speak(currentUtterance);
+        }
+
+        function stopSpeech() {
+            if (synth) synth.cancel();
+            if (fallbackTimer) clearTimeout(fallbackTimer);
+            setAudioBadge(false, 'Parado');
+        }
+
+        function setAudioBadge(active, text) {
+            audioLabel.textContent = text;
+            if (active) {
+                audioDot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-ping';
+            } else {
+                audioDot.className = 'w-2 h-2 rounded-full bg-slate-300';
+            }
+        }
+
+        function clearSpeechAndTimers() {
+            stopSpeech();
+            clearInterval(quizTimerInterval);
+        }
+
+        // CONTROLS LOGIC
+        function goToSlide(index) {
+            loadSlide(index, isPlaying);
+        }
+
+        goToQuizBtn.addEventListener('click', () => {
+            startQuizState();
+        });
+
+        playPauseBtn.addEventListener('click', () => {
+            isPlaying = !isPlaying;
+            updatePlayPauseUI();
+            if (isPlaying) {
+                const item = SLIDES[currentSlideIndex];
+                if (activePhase === 'BIO') speakText(item.speech, onBioSpeechEnded);
+                else if (activePhase === 'QUIZ') speakText(item.quiz.speechQuestion);
+            } else {
+                clearSpeechAndTimers();
+            }
+        });
+
+        function updatePlayPauseUI() {
+            if (isPlaying) {
+                playPauseIcon.className = 'fa-solid fa-pause text-xs';
+                playPauseText.textContent = 'Pausar';
+            } else {
+                playPauseIcon.className = 'fa-solid fa-play text-xs';
+                playPauseText.textContent = 'Reproduzir';
+            }
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentSlideIndex > 0) loadSlide(currentSlideIndex - 1, isPlaying);
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentSlideIndex < SLIDES.length - 1) loadSlide(currentSlideIndex + 1, isPlaying);
+        });
+
+        muteToggleBtn.addEventListener('click', () => {
+            isMuted = !isMuted;
+            if (isMuted) {
+                muteIcon.className = 'fa-solid fa-volume-xmark text-xs text-red-500';
+                stopSpeech();
+            } else {
+                muteIcon.className = 'fa-solid fa-volume-high text-xs';
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            userScores = [false, false, false];
+            loadSlide(0, true);
+        });
+    </script>
+</body>
+</html>

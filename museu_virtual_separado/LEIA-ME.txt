@@ -1,0 +1,21 @@
+MUSEU VIRTUAL — ARQUIVOS SEPARADOS
+
+Estrutura:
+- index.html: estrutura e conteúdo da página (HTML5).
+- css/style.css: estilos personalizados (CSS3).
+- js/tailwind-config.js: configuração do Tailwind CSS.
+- js/script.js: funcionalidades e interações (JavaScript).
+
+Tecnologias utilizadas:
+- HTML5
+- CSS3
+- JavaScript
+- Tailwind CSS (carregado por CDN)
+- Font Awesome (ícones, carregados por CDN)
+- Google Fonts (fontes, carregadas externamente)
+
+Como abrir:
+1. Mantenha todos os arquivos e pastas na mesma estrutura.
+2. Abra o arquivo index.html em um navegador.
+3. É necessária conexão com a internet para carregar Tailwind CSS, Font Awesome,
+   Google Fonts e as imagens hospedadas externamente.
